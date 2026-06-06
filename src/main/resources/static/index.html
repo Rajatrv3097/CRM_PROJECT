@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoftCRM - Enterprise CRM Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #0f0f12; color: #e2e8f0; }
+
+        /* Auth Styles */
+        .auth-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0f0f12 0%, #1a1a2e 100%); }
+        .auth-card { background: rgba(26, 31, 46, 0.95); border-radius: 24px; padding: 40px; width: 440px; border: 1px solid rgba(79, 142, 247, 0.2); backdrop-filter: blur(10px); }
+        .auth-logo { font-size: 28px; font-weight: 700; text-align: center; margin-bottom: 32px; background: linear-gradient(135deg, #4f8ef7, #7c3aed); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .auth-tabs { display: flex; gap: 8px; margin-bottom: 28px; background: rgba(0,0,0,0.3); padding: 4px; border-radius: 12px; }
+        .auth-tab { flex: 1; text-align: center; padding: 10px; border-radius: 8px; cursor: pointer; transition: all 0.3s; font-weight: 500; }
+        .auth-tab.active { background: linear-gradient(135deg, #4f8ef7, #7c3aed); color: white; }
+
+        /* Input Styles */
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; margin-bottom: 6px; font-size: 12px; font-weight: 500; color: #8b92a8; }
+        .input-group input, .input-group select, .input-group textarea { width: 100%; padding: 10px 14px; background: #141824; border: 1px solid #2a2e3e; border-radius: 8px; color: #e2e8f0; font-size: 14px; transition: all 0.2s; }
+        .input-group input:focus, .input-group select:focus, .input-group textarea:focus { outline: none; border-color: #4f8ef7; }
+
+        /* Button Styles */
+        .btn { padding: 10px 20px; border-radius: 8px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: none; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; justify-content: center; }
+        .btn-primary { background: linear-gradient(135deg, #4f8ef7, #7c3aed); color: white; }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-secondary { background: #2a2e3e; color: #a0a8c0; border: 1px solid #3a3e4e; }
+        .btn-secondary:hover { background: #3a3e4e; }
+        .btn-danger { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+        .btn-danger:hover { background: rgba(239,68,68,0.25); }
+        .btn-success { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .btn-block { width: 100%; }
+
+        /* App Layout */
+        .app-container { display: none; min-height: 100vh; }
+        .app-container.active { display: flex; }
+        .sidebar { width: 260px; background: #0c0e14; border-right: 1px solid #1e2230; min-height: 100vh; position: fixed; left: 0; top: 0; }
+        .sidebar-header { padding: 20px 24px; border-bottom: 1px solid #1e2230; }
+        .sidebar-header h2 { font-size: 20px; background: linear-gradient(135deg, #4f8ef7, #7c3aed); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .sidebar-user { padding: 16px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #1e2230; }
+        .user-avatar { width: 40px; height: 40px; background: linear-gradient(135deg, #4f8ef7, #7c3aed); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 16px; }
+        .user-info h4 { font-size: 14px; font-weight: 600; }
+        .user-info p { font-size: 11px; color: #7c839a; }
+        .nav-menu { padding: 16px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 8px; cursor: pointer; transition: all 0.2s; color: #8b92a8; margin-bottom: 4px; font-size: 14px; }
+        .nav-item:hover, .nav-item.active { background: rgba(79, 142, 247, 0.1); color: #4f8ef7; }
+        .nav-item i { width: 20px; }
+        .main-content { margin-left: 260px; flex: 1; padding: 20px 28px; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .page-title { font-size: 24px; font-weight: 600; }
+
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: #131720; border-radius: 12px; padding: 16px 20px; border: 1px solid #1e2230; }
+        .stat-card h4 { font-size: 11px; color: #7c839a; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-card .value { font-size: 28px; font-weight: 600; }
+
+        /* Card Styles */
+        .card { background: #131720; border-radius: 12px; border: 1px solid #1e2230; margin-bottom: 20px; overflow: hidden; }
+        .card-header { padding: 16px 20px; border-bottom: 1px solid #1e2230; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+        .card-header h3 { font-size: 16px; font-weight: 600; }
+        .card-body { padding: 0; }
+
+        /* Table Styles */
+        .data-table { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px 16px; color: #8b92a8; font-weight: 500; font-size: 12px; background: #0f1118; border-bottom: 1px solid #1e2230; }
+        td { padding: 12px 16px; border-bottom: 1px solid #1e2230; font-size: 13px; }
+        tr:hover td { background: rgba(79, 142, 247, 0.03); }
+
+        /* Badge Styles */
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 500; }
+        .badge-success { background: rgba(16,185,129,0.15); color: #10b981; }
+        .badge-warning { background: rgba(245,158,11,0.15); color: #f59e0b; }
+        .badge-danger { background: rgba(239,68,68,0.15); color: #ef4444; }
+        .badge-info { background: rgba(79,142,247,0.15); color: #4f8ef7; }
+        .badge-purple { background: rgba(139,92,246,0.15); color: #a78bfa; }
+
+        /* Action Buttons */
+        .action-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+        .action-btn { width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; border: none; background: transparent; color: #7c839a; font-size: 12px; }
+        .action-btn:hover { background: rgba(79, 142, 247, 0.1); color: #4f8ef7; }
+
+        /* Modal Styles */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); align-items: center; justify-content: center; z-index: 1000; }
+        .modal.active { display: flex; }
+        .modal-content { background: #131720; border-radius: 16px; width: 90%; max-width: 850px; max-height: 85vh; overflow-y: auto; border: 1px solid #2a2e3e; }
+        .modal-header { padding: 16px 20px; border-bottom: 1px solid #1e2230; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 18px; font-weight: 600; }
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 16px 20px; border-top: 1px solid #1e2230; display: flex; justify-content: flex-end; gap: 12px; }
+        .close-modal { cursor: pointer; font-size: 20px; color: #7c839a; transition: all 0.2s; }
+        .close-modal:hover { color: #ef4444; }
+
+        /* Split Layout */
+        .split-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .split-section { background: #0f1118; border-radius: 12px; padding: 16px; border: 1px solid #1e2230; }
+        .split-section h4 { font-size: 14px; margin-bottom: 16px; color: #4f8ef7; display: flex; align-items: center; gap: 8px; }
+        .form-grid { display: grid; gap: 12px; }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+
+        /* Toast */
+        .toast { position: fixed; bottom: 20px; right: 20px; background: #1a1f2e; border-radius: 8px; padding: 10px 16px; z-index: 1100; transform: translateX(100%); transition: transform 0.3s; border-left: 3px solid; }
+        .toast.show { transform: translateX(0); }
+        .toast.success { border-color: #10b981; color: #10b981; }
+        .toast.error { border-color: #ef4444; color: #ef4444; }
+
+        /* History Timeline */
+        .history-timeline { padding-left: 20px; max-height: 450px; overflow-y: auto; }
+        .history-item { position: relative; padding-bottom: 16px; padding-left: 20px; border-left: 2px solid #4f8ef7; margin-bottom: 8px; }
+        .history-item:before { content: ''; position: absolute; left: -7px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: #4f8ef7; }
+        .history-action { font-weight: 600; color: #4f8ef7; font-size: 13px; }
+        .history-details { font-size: 12px; color: #a0a8c0; margin-top: 4px; }
+        .history-meta { font-size: 10px; color: #6b7280; margin-top: 6px; display: flex; gap: 12px; }
+
+        .loading { text-align: center; padding: 40px; color: #7c839a; }
+        .spinner { width: 32px; height: 32px; border: 2px solid rgba(79,142,247,0.2); border-top-color: #4f8ef7; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 12px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .empty-state { text-align: center; padding: 40px; color: #6b7280; }
+        .empty-state i { font-size: 40px; margin-bottom: 12px; opacity: 0.5; }
+        .access-denied { text-align: center; padding: 60px 20px; }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 70px; }
+            .sidebar span:not(.nav-icon) { display: none; }
+            .main-content { margin-left: 70px; padding: 16px; }
+            .form-row, .split-layout { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div id="authScreen" class="auth-container">
+    <div class="auth-card">
+        <div class="auth-logo"><i class="fas fa-cloud"></i> SoftCRM</div>
+        <div class="auth-tabs"><div class="auth-tab active" onclick="switchTab('login')">Login</div><div class="auth-tab" onclick="switchTab('register')">Register</div></div>
+        <div id="loginForm"><div class="input-group"><label>Email</label><input type="email" id="loginEmail" placeholder="admin@softcrm.com" value="admin@softcrm.com"></div><div class="input-group"><label>Password</label><input type="password" id="loginPassword" placeholder="••••••••" value="admin123"></div><button class="btn btn-primary btn-block" onclick="handleLogin()">Sign In</button><div style="margin-top:16px;text-align:center"><a href="#" onclick="showForgotPassword()" style="color:#4f8ef7; font-size:13px;">Forgot Password?</a></div></div>
+        <div id="registerForm" style="display:none"><div class="form-row"><div class="input-group"><label>First Name</label><input id="regFirstName"></div><div class="input-group"><label>Last Name</label><input id="regLastName"></div></div><div class="input-group"><label>Username</label><input id="regUsername"></div><div class="input-group"><label>Email</label><input id="regEmail"></div><div class="input-group"><label>Phone</label><input id="regPhone" maxlength="10"></div><div class="input-group"><label>Password</label><input type="password" id="regPassword"></div><button class="btn btn-primary btn-block" onclick="handleRegister()">Create Account</button></div>
+        <div id="forgotForm" style="display:none"><div class="input-group"><label>Email</label><input id="forgotEmail"></div><button class="btn btn-primary btn-block" onclick="sendResetOtp()">Send OTP</button><div style="margin-top:12px;text-align:center"><a href="#" onclick="showLogin()" style="color:#4f8ef7; font-size:13px;">Back to Login</a></div></div>
+    </div>
+</div>
+
+<div id="appContainer" class="app-container">
+    <div class="sidebar"><div class="sidebar-header"><h2><i class="fas fa-cloud"></i> SoftCRM</h2></div><div class="sidebar-user"><div class="user-avatar" id="userAvatar">U</div><div class="user-info"><h4 id="userName">User</h4><p id="userRole">Role</p></div></div><div class="nav-menu" id="navMenu"></div></div>
+    <div class="main-content"><div class="top-bar"><h1 class="page-title" id="pageTitle">Dashboard</h1><button class="btn btn-secondary btn-sm" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button></div><div id="pageContent"></div></div>
+</div>
+
+<!-- Modals -->
+<div id="leadModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Create/Edit Lead</h3><span class="close-modal" onclick="closeModal('leadModal')">&times;</span></div><div class="modal-body"><div class="form-row"><div class="input-group"><label>Name *</label><input id="leadName"></div><div class="input-group"><label>Email</label><input id="leadEmail"></div></div><div class="form-row"><div class="input-group"><label>Phone *</label><input id="leadPhone" maxlength="10"></div><div class="input-group"><label>Company</label><input id="leadCompany"></div></div><div class="form-row"><div class="input-group"><label>Source</label><select id="leadSource"><option>WEBSITE</option><option>FACEBOOK_ADS</option><option>GOOGLE_ADS</option><option>INSTAGRAM</option><option>REFERRAL</option></select></div><div class="input-group"><label>Status</label><select id="leadStatus"><option>NEW</option><option>CONTACTED</option><option>QUALIFIED</option><option>PROPOSAL_SENT</option><option>NEGOTIATION</option><option>CONVERTED</option><option>LOST</option></select></div></div><div class="form-row"><div class="input-group"><label>Score</label><input type="number" id="leadScore" value="0"></div><div class="input-group"><label>Expected Revenue</label><input id="leadRevenue" type="number"></div></div><div class="input-group"><label>Description</label><textarea id="leadDescription" rows="2"></textarea></div><div class="input-group" id="assignToGroup" style="display:none;"><label>Assign To</label><select id="assignToSelect"></select></div><input type="hidden" id="leadEditId"></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('leadModal')">Cancel</button><button class="btn btn-primary" onclick="submitLead()">Save Lead</button></div></div></div>
+
+<div id="noteModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Add Note</h3><span class="close-modal" onclick="closeModal('noteModal')">&times;</span></div><div class="modal-body"><textarea id="noteText" rows="3" style="width:100%; padding:10px; background:#0f1118; border:1px solid #2a2e3e; border-radius:8px; color:#e2e8f0;"></textarea></div><div class="modal-footer"><button class="btn btn-primary" onclick="submitNote()">Add Note</button></div></div></div>
+
+<div id="followupModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Schedule Followup</h3><span class="close-modal" onclick="closeModal('followupModal')">&times;</span></div><div class="modal-body"><div class="input-group"><label>Date & Time</label><input type="datetime-local" id="followupDate"></div><div class="input-group"><label>Note</label><textarea id="followupNote" rows="2"></textarea></div></div><div class="modal-footer"><button class="btn btn-primary" onclick="submitFollowup()">Schedule</button></div></div></div>
+
+<div id="historyModal" class="modal"><div class="modal-content" style="max-width:650px"><div class="modal-header"><h3>Lead History</h3><span class="close-modal" onclick="closeModal('historyModal')">&times;</span></div><div class="modal-body" id="historyContent"></div></div></div>
+
+<div id="assignModal" class="modal"><div class="modal-content" style="max-width:400px"><div class="modal-header"><h3>Assign Lead</h3><span class="close-modal" onclick="closeModal('assignModal')">&times;</span></div><div class="modal-body"><div class="input-group"><label>Select Employee</label><select id="assignEmployeeSelect"></select></div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('assignModal')">Cancel</button><button class="btn btn-primary" onclick="confirmAssignLead()">Assign</button></div></div></div>
+
+<div id="customerModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Create Customer</h3><span class="close-modal" onclick="closeModal('customerModal')">&times;</span></div><div class="modal-body"><div class="form-row"><div class="input-group"><label>Name *</label><input id="custName"></div><div class="input-group"><label>Email</label><input id="custEmail"></div></div><div class="form-row"><div class="input-group"><label>Phone *</label><input id="custPhone" maxlength="10"></div><div class="input-group"><label>Company</label><input id="custCompany"></div></div><div class="form-row"><div class="input-group"><label>GST</label><input id="custGst"></div><div class="input-group"><label>Industry</label><input id="custIndustry"></div></div><div class="form-row"><div class="input-group"><label>Address</label><input id="custAddress"></div><div class="input-group"><label>City</label><input id="custCity"></div></div><div class="form-row"><div class="input-group"><label>Tier</label><select id="custTier"><option>BRONZE</option><option>SILVER</option><option>GOLD</option><option>PLATINUM</option></select></div><div class="input-group"><label>Tags</label><input id="custTags"></div></div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('customerModal')">Cancel</button><button class="btn btn-primary" onclick="submitCustomer()">Create</button></div></div></div>
+
+<div id="profileModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Edit Profile</h3><span class="close-modal" onclick="closeModal('profileModal')">&times;</span></div><div class="modal-body"><div class="form-row"><div class="input-group"><label>First Name</label><input id="profileFirstName"></div><div class="input-group"><label>Last Name</label><input id="profileLastName"></div></div><div class="input-group"><label>Phone</label><input id="profilePhone" maxlength="10"></div><div class="input-group"><label>Department</label><input id="profileDepartment"></div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('profileModal')">Cancel</button><button class="btn btn-primary" onclick="updateProfile()">Update</button></div></div></div>
+
+<div id="passwordModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Change Password</h3><span class="close-modal" onclick="closeModal('passwordModal')">&times;</span></div><div class="modal-body"><div class="input-group"><label>Current Password</label><input type="password" id="currentPassword"></div><div class="input-group"><label>New Password</label><input type="password" id="newPassword"></div><div class="input-group"><label>Confirm</label><input type="password" id="confirmPassword"></div></div><div class="modal-footer"><button class="btn btn-primary" onclick="changePassword()">Change</button></div></div></div>
+
+<div id="companyModal" class="modal"><div class="modal-content" style="max-width:900px"><div class="modal-header"><h3>Create Company</h3><span class="close-modal" onclick="closeModal('companyModal')">&times;</span></div><div class="modal-body"><div class="split-layout"><div class="split-section"><h4>Company Details</h4><div class="form-grid"><div class="input-group"><label>Name *</label><input id="compName"></div><div class="input-group"><label>Email</label><input id="compEmail"></div><div class="input-group"><label>Phone</label><input id="compPhone" maxlength="10"></div><div class="input-group"><label>Address</label><input id="compAddress"></div><div class="form-row" style="margin:0"><div class="input-group"><label>City</label><input id="compCity"></div><div class="input-group"><label>State</label><input id="compState"></div></div><div class="form-row" style="margin:0"><div class="input-group"><label>Max Users</label><input id="compMaxUsers" value="10" type="number"></div><div class="input-group"><label>Plan</label><select id="compPlan"><option>BASIC</option><option>PROFESSIONAL</option><option>ENTERPRISE</option></select></div></div></div></div><div class="split-section"><h4>Admin Account</h4><div class="form-grid"><div class="form-row" style="margin:0"><div class="input-group"><label>First Name</label><input id="adminFname"></div><div class="input-group"><label>Last Name</label><input id="adminLname"></div></div><div class="input-group"><label>Email *</label><input id="adminEmail"></div><div class="input-group"><label>Username *</label><input id="adminUsername"></div><div class="input-group"><label>Phone *</label><input id="adminPhone" maxlength="10"></div><div class="input-group"><label>Password *</label><input type="password" id="adminPassword"></div></div></div></div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('companyModal')">Cancel</button><button class="btn btn-primary" onclick="submitCompany()">Create</button></div></div></div>
+
+<div id="userModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Create User</h3><span class="close-modal" onclick="closeModal('userModal')">&times;</span></div><div class="modal-body"><div class="form-row"><div class="input-group"><label>First Name</label><input id="userFname"></div><div class="input-group"><label>Last Name</label><input id="userLname"></div></div><div class="form-row"><div class="input-group"><label>Username *</label><input id="userUsername"></div><div class="input-group"><label>Email *</label><input id="userEmail"></div></div><div class="form-row"><div class="input-group"><label>Phone *</label><input id="userPhone" maxlength="10"></div><div class="input-group"><label>Password *</label><input type="password" id="userPassword"></div></div><div class="form-row"><div class="input-group"><label>Department</label><input id="userDept"></div><div class="input-group"><label>User Type</label><select id="userType"><option>EMPLOYEE</option><option>MANAGER</option><option>ADMIN</option></select></div></div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('userModal')">Cancel</button><button class="btn btn-primary" onclick="submitUser()">Create</button></div></div></div>
+
+<script>
+    const API_BASE = 'http://localhost:8085';
+    let token = localStorage.getItem('token');
+    let currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+    let currentLeadId = null;
+    let currentAssignLeadId = null;
+
+    function showToast(m, t) {
+        const toast = document.createElement('div');
+        toast.className = `toast ${t}`;
+        toast.innerHTML = `<i class="fas ${t==='success'?'fa-check-circle':'fa-exclamation-circle'}"></i> ${m}`;
+        document.body.appendChild(toast);
+        setTimeout(()=>toast.classList.add('show'),10);
+        setTimeout(()=>{toast.classList.remove('show');setTimeout(()=>toast.remove(),300);},3000);
+    }
+
+    async function apiCall(method, endpoint, body = null) {
+        const options = { method, headers: { 'Content-Type': 'application/json' } };
+        if (token) options.headers['Authorization'] = `Bearer ${token}`;
+        if (body) options.body = JSON.stringify(body);
+        try {
+            const response = await fetch(`${API_BASE}${endpoint}`, options);
+            const text = await response.text();
+            let data;
+            try { data = text ? JSON.parse(text) : {}; } catch(e) { data = { success: response.ok, message: response.statusText }; }
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) { logout(); throw new Error('Session expired'); }
+                throw new Error(data.message || `HTTP ${response.status}`);
+            }
+            return data;
+        } catch(error) {
+            if (error.message === 'Failed to fetch') {
+                showToast('Cannot connect to server. Backend running?', 'error');
+                throw new Error('Server connection failed');
+            }
+            throw error;
+        }
+    }
+
+    function switchTab(t) {
+        document.getElementById('loginForm').style.display = t==='login'?'block':'none';
+        document.getElementById('registerForm').style.display = t==='register'?'block':'none';
+        document.getElementById('forgotForm').style.display='none';
+        document.querySelectorAll('.auth-tab').forEach(tab=>tab.classList.remove('active'));
+        if(t==='login') document.querySelector('.auth-tab:first-child').classList.add('active');
+        else document.querySelector('.auth-tab:last-child').classList.add('active');
+    }
+
+    function showLogin() { document.getElementById('loginForm').style.display='block'; document.getElementById('registerForm').style.display='none'; document.getElementById('forgotForm').style.display='none'; }
+    function showForgotPassword() { document.getElementById('loginForm').style.display='none'; document.getElementById('registerForm').style.display='none'; document.getElementById('forgotForm').style.display='block'; }
+
+    async function handleLogin() {
+        const e = document.getElementById('loginEmail').value, p = document.getElementById('loginPassword').value;
+        if(!e||!p){ showToast('Enter email & password','error'); return; }
+        try {
+            const res = await apiCall('POST','/api/auth/login',{email:e,password:p});
+            if(res.success && res.data){
+                token = res.data.accessToken;
+                currentUser = res.data;
+                localStorage.setItem('token',token);
+                localStorage.setItem('user',JSON.stringify(currentUser));
+                showToast('Login successful!','success');
+                initApp();
+            }
+        } catch(err){ showToast(err.message,'error'); }
+    }
+
+    async function handleRegister() {
+        const p = {
+            username:document.getElementById('regUsername').value,
+            email:document.getElementById('regEmail').value,
+            phone:document.getElementById('regPhone').value,
+            password:document.getElementById('regPassword').value,
+            firstName:document.getElementById('regFirstName').value,
+            lastName:document.getElementById('regLastName').value,
+            role:'CUSTOMER'
+        };
+        if(!p.username||!p.email||!p.phone||!p.password){ showToast('Fill all fields','error'); return; }
+        if(p.phone.length!==10){ showToast('Phone must be 10 digits','error'); return; }
+        try {
+            await apiCall('POST','/api/auth/register',p);
+            showToast('Registration success!','success');
+            switchTab('login');
+        } catch(e){ showToast(e.message,'error'); }
+    }
+
+    async function sendResetOtp() {
+        const e = document.getElementById('forgotEmail').value;
+        if(!e){ showToast('Enter email','error'); return; }
+        try {
+            await apiCall('POST',`/api/auth/forgot-password?email=${encodeURIComponent(e)}`);
+            showToast('OTP sent!','success');
+        } catch(e){ showToast(e.message,'error'); }
+    }
+
+    function logout() {
+        localStorage.clear();
+        token=null;
+        currentUser=null;
+        document.getElementById('appContainer').classList.remove('active');
+        document.getElementById('authScreen').style.display='flex';
+        showToast('Logged out','success');
+    }
+
+    function buildSidebar() {
+        const role = currentUser?.userType || 'EMPLOYEE';
+        const items = [{id:'dashboard', icon:'fas fa-chart-line', label:'Dashboard'}];
+        if (role === 'ADMIN' || role === 'MANAGER' || role === 'EMPLOYEE') items.push({id:'leads', icon:'fas fa-users', label:'Leads'}, {id:'customers', icon:'fas fa-building', label:'Customers'});
+        if (role === 'SUPER_ADMIN' || role === 'ADMIN') items.push({id:'users', icon:'fas fa-user-shield', label:'Users'});
+        if (role === 'SUPER_ADMIN') items.push({id:'companies', icon:'fas fa-building', label:'Companies'});
+        items.push({id:'profile', icon:'fas fa-user', label:'Profile'});
+        document.getElementById('navMenu').innerHTML = items.map(i => `<div class="nav-item" onclick="loadPage('${i.id}')"><i class="${i.icon}"></i><span>${i.label}</span></div>`).join('');
+    }
+
+    async function loadPage(p) {
+        const role = currentUser?.userType || 'EMPLOYEE';
+        if (p === 'leads' && role === 'SUPER_ADMIN') {
+            document.getElementById('pageContent').innerHTML = `<div class="access-denied"><i class="fas fa-lock"></i><h2>Access Denied</h2><button class="btn btn-primary" onclick="loadPage('dashboard')">Go to Dashboard</button></div>`;
+            document.getElementById('pageTitle').innerText = 'Access Denied';
+            return;
+        }
+        document.getElementById('pageTitle').innerText = p.charAt(0).toUpperCase() + p.slice(1);
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        if (event?.target?.closest('.nav-item')) event.target.closest('.nav-item').classList.add('active');
+        if (p === 'dashboard') await loadDashboard();
+        else if (p === 'leads') await loadLeads();
+        else if (p === 'customers') await loadCustomers();
+        else if (p === 'users') await loadUsers();
+        else if (p === 'companies') await loadCompanies();
+        else if (p === 'profile') await loadProfile();
+    }
+
+    async function loadDashboard() {
+        const c = document.getElementById('pageContent');
+        c.innerHTML='<div class="loading"><div class="spinner"></div>Loading...</div>';
+        try {
+            const res = await apiCall('GET','/api/dashboard/my-dashboard');
+            if(res.success){
+                const d = res.data;
+                c.innerHTML = `<div class="stats-grid"><div class="stat-card"><h4>Total Revenue</h4><div class="value">$${(d.totalRevenue||0).toLocaleString()}</div></div><div class="stat-card"><h4>Active Deals</h4><div class="value">${d.activeDeals||0}</div></div><div class="stat-card"><h4>Total Leads</h4><div class="value">${d.totalLeads||0}</div></div><div class="stat-card"><h4>Pending Tasks</h4><div class="value">${d.pendingTasks||0}</div></div></div><div class="card"><div class="card-header"><h3>Recent Activity</h3></div><div class="card-body"><div class="data-table"><table>${(d.recentActivities||[]).slice(0,5).map(a=>`<tr><td style="padding:12px 16px; border-bottom:1px solid #1e2230;">${a.description||a.action} - ${a.userName||'System'}</td></tr>`).join('')||'<tr><td style="padding:20px;text-align:center">No activity</td></tr>'}</table></div></div></div>`;
+            }
+        } catch(e){ c.innerHTML=`<div class="card"><div class="card-body">Error: ${e.message}</div></div>`; }
+    }
+
+    async function loadAvailableEmployees() {
+        try {
+            const res = await apiCall('GET', '/api/leads/available-employees');
+            if (res.success && res.data) {
+                const options = '<option value="">-- Select --</option>' + res.data.map(emp => `<option value="${emp.id}">${emp.firstName} ${emp.lastName} (${emp.userType})</option>`).join('');
+                document.getElementById('assignToSelect') && (document.getElementById('assignToSelect').innerHTML = options);
+                document.getElementById('assignEmployeeSelect') && (document.getElementById('assignEmployeeSelect').innerHTML = options);
+            }
+        } catch(e) { console.error('Error:', e); }
+    }
+
+    async function loadLeads() {
+        const c = document.getElementById('pageContent');
+        const canAssign = (currentUser?.userType === 'ADMIN' || currentUser?.userType === 'MANAGER');
+        c.innerHTML = `<div class="card"><div class="card-header"><h3>Leads Management</h3><button class="btn btn-primary btn-sm" onclick="openLeadModal()"><i class="fas fa-plus"></i> New Lead</button></div><div class="card-body"><div class="data-table"><table><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Company</th><th>Assigned To</th><th>Status</th><th>Source</th><th>Score</th><th>Actions</th></tr></thead><tbody id="leadsTableBody"><tr><td colspan="10" class="loading"><div class="spinner"></div></td></tr></tbody></table></div></div></div>`;
+        try {
+            const res = await apiCall('GET','/api/leads');
+            if(res.success && res.data){
+                const leads = res.data;
+                const tbody = document.getElementById('leadsTableBody');
+                if(leads.length === 0){
+                    tbody.innerHTML = '<tr><td colspan="10" class="empty-state"><i class="fas fa-inbox"></i><p>No leads found</p></td></tr>';
+                } else {
+                    tbody.innerHTML = leads.map(l => `
+                        <tr>
+                            <td>${l.id}</td>
+                            <td><strong>${l.name}</strong></td>
+                            <td>${l.email || '-'}</td>
+                            <td>${l.phone || '-'}</td>
+                            <td>${l.company || '-'}</td>
+                            <td>${l.assignedToName ? `<span class="badge badge-info">${l.assignedToName}</span>` : '<span class="badge">Unassigned</span>'}</td>
+                            <td><span class="badge ${l.status==='CONVERTED'?'badge-success':l.status==='LOST'?'badge-danger':'badge-info'}">${l.status}</span></td>
+                            <td><span class="badge badge-purple">${l.source || 'WEBSITE'}</span></td>
+                            <td><span class="badge badge-info">${l.score || 0}</span></td>
+                            <td class="action-buttons">
+                                <button class="action-btn" onclick="editLead(${l.id})" title="Edit"><i class="fas fa-edit"></i></button>
+                                ${canAssign ? `<button class="action-btn" onclick="openAssignModal(${l.id})" title="Assign"><i class="fas fa-user-check"></i></button>` : ''}
+                                <button class="action-btn" onclick="viewLeadHistory(${l.id})" title="History"><i class="fas fa-history"></i></button>
+                                <button class="action-btn" onclick="openNoteModal(${l.id})" title="Note"><i class="fas fa-sticky-note"></i></button>
+                                <button class="action-btn" onclick="openFollowupModal(${l.id})" title="Followup"><i class="fas fa-clock"></i></button>
+                                <button class="action-btn" onclick="convertLead(${l.id})" title="Convert"><i class="fas fa-exchange-alt"></i></button>
+                                <button class="action-btn" onclick="permanentDeleteLead(${l.id})" title="Delete"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            }
+        } catch(e){ document.getElementById('leadsTableBody').innerHTML = `<tr><td colspan="10" style="color:#ef4444;text-align:center">Error: ${e.message}</td></tr>`; }
+    }
+
+    function openLeadModal() {
+        ['leadName','leadEmail','leadPhone','leadCompany','leadDescription','leadRevenue'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('leadStatus').value = 'NEW';
+        document.getElementById('leadScore').value = '0';
+        document.getElementById('leadSource').value = 'WEBSITE';
+        document.getElementById('leadEditId').value = '';
+        const assignGroup = document.getElementById('assignToGroup');
+        if (currentUser?.userType === 'ADMIN' || currentUser?.userType === 'MANAGER') {
+            assignGroup.style.display = 'block';
+            loadAvailableEmployees();
+        } else {
+            assignGroup.style.display = 'none';
+        }
+        openModal('leadModal');
+    }
+
+    async function editLead(id) {
+        try {
+            const res = await apiCall('GET',`/api/leads/${id}`);
+            if(res.success){
+                const l = res.data;
+                document.getElementById('leadName').value = l.name||'';
+                document.getElementById('leadEmail').value = l.email||'';
+                document.getElementById('leadPhone').value = l.phone||'';
+                document.getElementById('leadCompany').value = l.company||'';
+                document.getElementById('leadStatus').value = l.status||'NEW';
+                document.getElementById('leadScore').value = l.score||0;
+                document.getElementById('leadSource').value = l.source||'WEBSITE';
+                document.getElementById('leadRevenue').value = l.expectedRevenue||'';
+                document.getElementById('leadDescription').value = l.description||'';
+                document.getElementById('leadEditId').value = id;
+                if (currentUser?.userType === 'ADMIN' || currentUser?.userType === 'MANAGER') {
+                    document.getElementById('assignToGroup').style.display = 'block';
+                    await loadAvailableEmployees();
+                    if(l.assignedToId) document.getElementById('assignToSelect').value = l.assignedToId;
+                }
+                openModal('leadModal');
+            }
+        } catch(e){ showToast(e.message,'error'); }
+    }
+
+    async function submitLead() {
+        const id = document.getElementById('leadEditId').value;
+        const payload = {
+            name: document.getElementById('leadName').value,
+            email: document.getElementById('leadEmail').value,
+            phone: document.getElementById('leadPhone').value,
+            company: document.getElementById('leadCompany').value,
+            status: document.getElementById('leadStatus').value,
+            score: parseInt(document.getElementById('leadScore').value)||0,
+            source: document.getElementById('leadSource').value,
+            expectedRevenue: parseFloat(document.getElementById('leadRevenue').value)||null,
+            description: document.getElementById('leadDescription').value
+        };
+        if (currentUser?.userType === 'ADMIN' || currentUser?.userType === 'MANAGER') {
+            const assignedTo = document.getElementById('assignToSelect').value;
+            if (assignedTo) payload.assignedTo = parseInt(assignedTo);
+        }
+        if(!payload.name||!payload.phone){ showToast('Name and phone required','error'); return; }
+        if(payload.phone.length!==10){ showToast('Phone must be 10 digits','error'); return; }
+        try {
+            if(id) await apiCall('PUT',`/api/leads/${id}`,payload);
+            else await apiCall('POST','/api/leads',payload);
+            showToast(id?'Lead updated!':'Lead created!','success');
+            closeModal('leadModal');
+            loadLeads();
+        } catch(e){ showToast(e.message,'error'); }
+    }
+
+    function openAssignModal(leadId) { currentAssignLeadId = leadId; loadAvailableEmployees(); openModal('assignModal'); }
+    async function confirmAssignLead() {
+        const assignedTo = document.getElementById('assignEmployeeSelect').value;
+        if (!assignedTo) { showToast('Select an employee','error'); return; }
+        try {
+            await apiCall('POST', `/api/leads/${currentAssignLeadId}/assign`, { assignedTo: parseInt(assignedTo) });
+            showToast('Lead assigned','success');
+            closeModal('assignModal');
+            loadLeads();
+        } catch(e) { showToast(e.message,'error'); }
+    }
+
+    async function viewLeadHistory(id) {
+        try {
+            const res = await apiCall('GET', `/api/leads/${id}/history`);
+            const history = res.data || [];
+            document.getElementById('historyContent').innerHTML = history.length ? `<div class="history-timeline">${history.map(h => `<div class="history-item"><div class="history-action">${h.action || 'Update'}</div><div class="history-details">${h.details || ''}</div><div class="history-meta"><span><i class="fas fa-user"></i> ${h.changedBy || 'System'}</span><span><i class="fas fa-clock"></i> ${new Date(h.timestamp).toLocaleString()}</span></div></div>`).join('')}</div>` : '<div class="loading">No history recorded</div>';
+            openModal('historyModal');
+        } catch(e){ showToast(e.message,'error'); }
+    }
+
+    function openNoteModal(id) { currentLeadId=id; document.getElementById('noteText').value=''; openModal('noteModal'); }
+    async function submitNote() {
+        const note = document.getElementById('noteText').value;
+        if(!note){ showToast('Enter note','error'); return; }
+        try {
+            await apiCall('POST',`/api/leads/${currentLeadId}/notes`,{note});
+            showToast('Note added!','success');
+            closeModal('noteModal');
+            loadLeads();
+        } catch(e){ showToast(e.message,'error'); }
+    }
+
+    function openFollowupModal(id) { currentLeadId=id; document.getElementById('followupDate').value=''; document.getElementById('followupNote').value=''; openModal('followupModal'); }
+    async function submitFollowup() {
+        const payload = { note: document.getElementById('followupNote').value, followupDate: document.getElementById('followupDate').value||null };
+        if(!payload.note){ showToast('Enter note','error'); return; }
+        try {
+            await apiCall('POST',`/api/leads/${currentLeadId}/followups`,payload);
+            showToast('Followup scheduled!','success');
+            closeModal('followupModal');
+            loadLeads();
+        } catch(e){ showToast(e.message,'error'); }
+    }
+
+    async function convertLead(id) {
+        if(confirm('Convert this lead to customer?')){
+            try {
+                await apiCall('POST',`/api/leads/${id}/convert`);
+                showToast('Lead converted!','success');
+                loadLeads();
+                loadCustomers();
+            } catch(e){ showToast(e.message,'error'); }
+        }
+    }
+
+    async function permanentDeleteLead(id) {
+        if(confirm('Permanently delete this lead?')){
+            try {
+                await apiCall('DELETE',`/api/leads/${id}/permanent`);
+                showToast('Lead deleted','success');
+                loadLeads();
+            } catch(e){ showToast(e.message,'error'); }
+        }
+    }
+
+    async function loadCustomers() {
+        const c = document.getElementById('pageContent');
+        c.innerHTML = `<div class="card"><div class="card-header"><h3>Customers</h3><button class="btn btn-primary btn-sm" onclick="openCustomerModal()"><i class="fas fa-plus"></i> New Customer</button></div><div class="card-body"><div class="data-table"><table><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Company</th><th>Tier</th><th>Total</th></tr></thead><tbody id="customersTableBody"><tr><td colspan="7" class="loading"><div class="spinner"></div></td></tr></tbody></table></div></div></div>`;
+        try {
+            const res = await apiCall('GET','/api/customers');
+            if(res.success && res.data){
+                const customers = res.data;
+                const tbody = document.getElementById('customersTableBody');
+                if(customers.length === 0){
+                    tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><i class="fas fa-users"></i><p>No customers</p></td></tr>';
+                } else {
+                    tbody.innerHTML = customers.map(c => `<tr><td>${c.id}</td><td><strong>${c.name}</strong></td><td>${c.email||'-'}</td><td>${c.phone||'-'}</td><td>${c.customerCompanyName||'-'}</td><td><span class="badge ${c.customerTier==='GOLD'?'badge-warning':c.customerTier==='PLATINUM'?'badge-purple':'badge-info'}">${c.customerTier||'BRONZE'}</span></td><td>$${(c.totalPurchases||0).toLocaleString()}</td></tr>`).join('');
+                }
+            }
+        } catch(e){ document.getElementById('customersTableBody').innerHTML = `<tr><td colspan="7" style="color:#ef4444">Error: ${e.message}</td></tr>`; }
+    }
+
+    function openCustomerModal() {
+        ['custName','custEmail','custPhone','custCompany','custGst','custIndustry','custAddress','custCity','custTags'].forEach(id => document.getElementById(id).value = '');
+        openModal('customerModal');
+    }
+
+    async function submitCustomer() {
+        const payload = {
+            name: document.getElementById('custName').value, email: document.getElementById('custEmail').value,
+            phone: document.getElementById('custPhone').value, customerCompanyName: document.getElementById('custCompany').value,
+            gstNumber: document.getElementById('custGst').value, industry: document.getElementById('custIndustry').value,
+            address: document.getElementById('custAddress').value, city: document.getElementById('custCity').value,
+            customerTier: document.getElementById('custTier').value, tags: document.getElementById('custTags').value.split(',').map(t=>t.trim()).filter(t=>t)
+        };
+        if(!payload.name||!payload.phone){ showToast('Name and phone required','error'); return; }
+        if(payload.phone.length!==10){ showToast('Phone must be 10 digits','error'); return; }
+        try {
+            await apiCall('POST','/api/customers',payload);
+            showToast('Customer created!','success');
+            closeModal('customerModal');
+            loadCustomers();
+        } catch(e){ showToast(e.message,'error'); }
+    }
+
+    async function loadUsers() {
+        const c = document.getElementById('pageContent');
+        c.innerHTML = `<div class="card"><div class="card-header"><h3>Users</h3><button class="btn btn-primary btn-sm" onclick="openUserModal()"><i class="fas fa-plus"></i> Add User</button></div><div class="card-body"><div class="data-table"><table><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Type</th><th>Department</th><th>Status</th></tr></thead><tbody id="usersTableBody"><tr><td colspan="6" class="loading"><div class="spinner"></div></td></tr></tbody></table></div></div></div>`;
+        try {
+            const res = await apiCall('GET','/api/admin/users');
+            if(res.success && res.data){
+                const users = res.data;
+                const tbody = document.getElementById('usersTableBody');
+                if(users.length === 0){
+                    tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><i class="fas fa-users"></i><p>No users</p></td></tr>';
+                } else {
+                    tbody.innerHTML = users.map(u => `<tr><td>${u.id}</td><td><strong>${u.firstName||''} ${u.lastName||''}</strong><br><small>@${u.username}</small></td><td>${u.email}</td><td><span class="badge ${u.userType==='SUPER_ADMIN'?'badge-purple':u.userType==='ADMIN'?'badge-info':u.userType==='MANAGER'?'badge-warning':'badge-success'}">${u.userType}</span></td><td>${u.department||'-'}</td><td><span class="badge ${u.status==='ACTIVE'?'badge-success':'badge-danger'}">${u.status||'ACTIVE'}</span></td></tr>`).join('');
+                }
+            }
+        } catch(e){ document.getElementById('usersTableBody').innerHTML = `<tr><td colspan="6" style="color:#ef4444">Error: ${e.message}</td></tr>`; }
+    }
+
+    function openUserModal() {
+        ['userFname','userLname','userUsername','userEmail','userPhone','userPassword','userDept'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('userType').value = 'EMPLOYEE';
+        openModal('userModal');
+    }
+
+    async function submitUser() {
+        const type = document.getElementById('userType').value;
+        let ep = '/api/admin/create-employee';
+        if(type === 'MANAGER') ep = '/api/admin/create-manager';
+        if(type === 'ADMIN') ep = '/api/admin/create-admin';
+        const payload = {
+            username: document.getElementById('userUsername').value, email: document.getElementById('userEmail').value,
+            phone: document.getElementById('userPhone').value, password: document.getElementById('userPassword').value,
+            firstName: document.getElementById('userFname').value, lastName: document.getElementById('userLname').value,
+            department: document.getElementById('userDept').value, userType: type
+        };
+        if(!payload.username||!payload.email||!payload.password){ showToast('Required fields missing','error'); return; }
+        if(payload.phone.length!==10){ showToast('Phone must be 10 digits','error'); return; }
+        try {
+            await apiCall('POST',ep,payload);
+            showToast('User created!','success');
+            closeModal('userModal');
+            loadUsers();
+        } catch(e){ showToast(e.message,'error'); }
+    }
+
+    async function loadCompanies() {
+        const c = document.getElementById('pageContent');
+        c.innerHTML = `<div class="card"><div class="card-header"><h3>Companies</h3><button class="btn btn-primary btn-sm" onclick="openCompanyModal()"><i class="fas fa-plus"></i> New Company</button></div><div class="card-body"><div class="data-table"><table><thead><tr><th>ID</th><th>Name</th><th>Code</th><th>Plan</th><th>Users</th><th>Status</th></tr></thead><tbody id="companiesTableBody"><tr><td colspan="6" class="loading"><div class="spinner"></div></td></tr></tbody></table></div></div></div>`;
+        try {
+            const res = await apiCall('GET','/api/super-admin/companies');
+            if(res.success && res.data){
+                const comps = res.data;
+                const tbody = document.getElementById('companiesTableBody');
+                if(comps.length === 0){
+                    tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><i class="fas fa-building"></i><p>No companies</p></td></tr>';
+                } else {
+                    tbody.innerHTML = comps.map(c => `<tr><td>${c.id}</td><td><strong>${c.name}</strong><br><small>${c.city||''}</small></td><td><code>${c.code}</code></td><td><span class="badge ${c.subscriptionPlan==='ENTERPRISE'?'badge-purple':c.subscriptionPlan==='PROFESSIONAL'?'badge-warning':'badge-info'}">${c.subscriptionPlan}</span></td><td>${c.totalUsers||0}/${c.maxUsers||0}</td><td><span class="badge ${c.isActive?'badge-success':'badge-danger'}">${c.isActive?'Active':'Inactive'}</span></td></tr>`).join('');
+                }
+            }
+        } catch(e){ document.getElementById('companiesTableBody').innerHTML = `<tr><td colspan="6" style="color:#ef4444">Error: ${e.message}</td></tr>`; }
+    }
+
+    function openCompanyModal() {
+        ['compName','compEmail','compPhone','compAddress','compCity','compState','adminFname','adminLname','adminEmail','adminUsername','adminPhone','adminPassword'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('compMaxUsers').value = '10';
+        openModal('companyModal');
+    }
+
+    async function submitCompany() {
+        const compPayload = {
+            name: document.getElementById('compName').value, email: document.getElementById('compEmail').value,
+            phone: document.getElementById('compPhone').value, address: document.getElementById('compAddress').value,
+            city: document.getElementById('compCity').value, state: document.getElementById('compState').value,
+            maxUsers: parseInt(document.getElementById('compMaxUsers').value)||10, subscriptionPlan: document.getElementById('compPlan').value
+        };
+        if(!compPayload.name){ showToast('Company name required','error'); return; }
+        try {
+            const compRes = await apiCall('POST','/api/super-admin/companies',compPayload);
+            const companyId = compRes.data.id;
+            const adminPayload = {
+                username: document.getElementById('adminUsername').value, email: document.getElementById('adminEmail').value,
+                phone: document.getElementById('adminPhone').value, password: document.getElementById('adminPassword').value,
+                firstName: document.getElementById('adminFname').value, lastName: document.getElementById('adminLname').value, companyId
+            };
+            if(!adminPayload.username||!adminPayload.email||!adminPayload.password){ showToast('Admin details required','error'); return; }
+            if(adminPayload.phone.length!==10){ showToast('Admin phone must be 10 digits','error'); return; }
+            await apiCall('POST','/api/super-admin/create-admin-with-company',adminPayload);
+            showToast('Company & Admin created!','success');
+            closeModal('companyModal');
+            loadCompanies();
+            loadUsers();
+        } catch(e){ showToast(e.message,'error'); }
+    }
+
+    async function loadProfile() {
+        const c = document.getElementById('pageContent');
+        try {
+            const res = await apiCall('GET','/api/users/profile');
+            const u = res.data;
+            document.getElementById('profileFirstName').value = u.firstName||'';
+            document.getElementById('profileLastName').value = u.lastName||'';
+            document.getElementById('profilePhone').value = u.phone||'';
+            document.getElementById('profileDepartment').value = u.department||'';
+            c.innerHTML = `<div class="card"><div class="card-header"><h3>My Profile</h3><button class="btn btn-secondary btn-sm" onclick="openModal('profileModal')">Edit Profile</button></div><div class="card-body"><div style="display:flex;gap:16px;margin-bottom:20px;"><div class="user-avatar" style="width:60px;height:60px;font-size:24px;">${(u.firstName?.[0]||u.username?.[0]||'U').toUpperCase()}</div><div><h2>${u.firstName||''} ${u.lastName||''}</h2><p><i class="fas fa-envelope"></i> ${u.email}</p><p><i class="fas fa-phone"></i> ${u.phone||'Not set'}</p><p><i class="fas fa-building"></i> ${u.department||'No department'}</p></div></div><button class="btn btn-secondary" onclick="openModal('passwordModal')">Change Password</button></div></div>`;
+        } catch(e){ c.innerHTML=`<div class="card"><div class="card-body">Error: ${e.message}</div></div>`; }
+    }
+
+    async function updateProfile() {
+        const payload = {
+            firstName: document.getElementById('profileFirstName').value, lastName: document.getElementById('profileLastName').value,
+            phone: document.getElementById('profilePhone').value, department: document.getElementById('profileDepartment').value
+        };
+        if(payload.phone && payload.phone.length !== 10 && payload.phone.length > 0){ showToast('Phone must be 10 digits','error'); return; }
+        try {
+            await apiCall('PUT','/api/users/profile',payload);
+            showToast('Profile updated!','success');
+            closeModal('profileModal');
+            loadProfile();
+            document.getElementById('userName').innerText = `${payload.firstName||''} ${payload.lastName||''}`.trim()||currentUser.username;
+            document.getElementById('userAvatar').innerText = (payload.firstName?.[0]||currentUser.username?.[0]||'U').toUpperCase();
+        } catch(e){ showToast(e.message,'error'); }
+    }
+
+    async function changePassword() {
+        const cur = document.getElementById('currentPassword').value, nw = document.getElementById('newPassword').value, cf = document.getElementById('confirmPassword').value;
+        if(!cur||!nw){ showToast('Fill all fields','error'); return; }
+        if(nw !== cf){ showToast('Passwords do not match','error'); return; }
+        if(nw.length < 6){ showToast('Password min 6 chars','error'); return; }
+        try {
+            await apiCall('POST',`/api/auth/change-password?oldPassword=${encodeURIComponent(cur)}&newPassword=${encodeURIComponent(nw)}`);
+            showToast('Password changed!','success');
+            closeModal('passwordModal');
+        } catch(e){ showToast(e.message,'error'); }
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    function initApp() {
+        if(!token || !currentUser){ document.getElementById('authScreen').style.display='flex'; document.getElementById('appContainer').classList.remove('active'); return; }
+        document.getElementById('authScreen').style.display='none';
+        document.getElementById('appContainer').classList.add('active');
+        document.getElementById('userName').innerText = `${currentUser.firstName||''} ${currentUser.lastName||''}`.trim() || currentUser.username;
+        document.getElementById('userRole').innerText = currentUser.userType || 'USER';
+        document.getElementById('userAvatar').innerText = (currentUser.firstName?.[0] || currentUser.username?.[0] || 'U').toUpperCase();
+        buildSidebar();
+        loadPage('dashboard');
+    }
+
+    if(token && currentUser) initApp(); else document.getElementById('authScreen').style.display='flex';
+</script>
+</body>
+</html>
